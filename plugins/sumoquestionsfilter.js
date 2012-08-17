@@ -81,6 +81,7 @@ Plugin = exports.Plugin = function(irc) {
     
     this.getTagged = function(channel, u, m) {
         var base = this.baseUrl;
+        var rand = this.rand, randNums = [];
         var tag = m.replace("!tagged", "").trim();
         var sluggifiedTag = tag.replace(/\s+/g,'-')
                    .replace(/[^a-zA-Z0-9\-]/g,'')
@@ -107,7 +108,14 @@ Plugin = exports.Plugin = function(irc) {
                     channel.send("No unanswered questions matching the tag " + tag + " found");
 
                 for(var i = 0; i < maxQuestions; i++) {
-                    var question = questions.eq(i);
+                    do {
+                        randNum = rand(questions.length);
+                    }
+                    while(randNums.indexOf(randNum) != -1);
+
+                    randNums.push(randNum);
+
+                    var question = questions.eq(randNum);
                     var user = $(question).find(".user").text();
                     var heading = $(question).find(".content a").text();
                     var link = $(question).find(".content a").attr("href");
