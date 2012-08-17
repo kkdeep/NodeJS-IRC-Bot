@@ -79,6 +79,12 @@ Plugin = exports.Plugin = function(irc) {
         channel.send("MPL. See http://www.mozilla.org/MPL/1.1/ for further details.");
     }
     
+    /**
+     * Returns questions tagged with the specific tag
+     * @param channel: Channel where the request was stated
+     * @param u: User who asked for random
+     * @param m: Message that contains the tag
+     */
     this.getTagged = function(channel, u, m) {
         var base = this.baseUrl;
         var rand = this.rand, randNums = [];
