@@ -69,7 +69,7 @@ Plugin = exports.Plugin = function(irc) {
         if(isNaN(numQuestions)) {
             numQuestions = 1;
         }
-        if(numQuestions > 10) {
+        if(numQuestions > 10 || numQuestions < 1) {
             channel.send(u + ": " + "Usage: !random <1..10>");
             return;
         }
