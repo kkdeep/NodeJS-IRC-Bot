@@ -49,8 +49,7 @@ Plugin = exports.Plugin = function(irc) {
         };
     }
     
-    this.postQuestionInfo = function(channel, u, question) {
-        var base = this.baseUrl;
+    this.postQuestionInfo = function(base, channel, u, question) {
         channel.send(u + ": " + question.user + " needs help with \"" + 
                      question.heading + "\" - " + base + question.link);  
     }
@@ -75,7 +74,7 @@ Plugin = exports.Plugin = function(irc) {
             var randNum = rand(1, questions.length)[0];
             var question = getQuestion(questions, randNum);
             
-            postIt(channel, u, question);
+            postIt(base, channel, u, question);
         });
     };
     
@@ -116,6 +115,7 @@ Plugin = exports.Plugin = function(irc) {
      * @param m: Message that contains the tag
      */
     this.getTagged = function(channel, u, m) {
+        var base = this.baseUrl;
         var getQuestion = this.getQuestion,
             getRandArray = this.getUniqueRandomNumbers,
             postIt = this.postQuestionInfo;
@@ -148,7 +148,7 @@ Plugin = exports.Plugin = function(irc) {
 
                 for(var i = 0; i < maxQuestions; i++) {
                     var question = getQuestion(questions, randNums[i]);
-                    postIt(channel, u, question);
+                    postIt(base, channel, u, question);
                 }
             };
         });
