@@ -18,9 +18,36 @@ Plugin = exports.Plugin = function(irc) {
     this.baseUrl = "https://support.mozilla.org";
     this.unansweredUrl = this.baseUrl + "/en-US/questions?filter=no-replies";
     
-    this.rand = function(max) {
-        return Math.floor(Math.random() * max);
-    };
+    this.getUniqueRandomNumbers = function(x, max) {
+        var randNums = [];
+        for(i = 0; i < x; i++) {
+            do {
+                randNum = Math.floor(Math.random() * max);
+            }
+            while(randNums.indexOf(randNum) != -1);
+            randNums.push(randNum);
+        };
+        
+        return randNums;
+    }
+    
+    /**
+     * Returns information about the question with the given index from the current listing
+     * @param body: HTML page source
+     * @param i: Index of the question
+     */
+    this.getQuestion = function(questions, i) {
+        var q = questions.eq(i);
+        var user = $(q).find(".user").text();
+        var heading = $(q).find(".content a").text();
+        var link = $(q).find(".content a").attr("href");
+
+        return {
+            user: user,
+            heading: heading,
+            link: link
+        };
+    }
     
     /**
      * Gets a random unanswered question from SUMO
@@ -30,22 +57,20 @@ Plugin = exports.Plugin = function(irc) {
      */
     this.getRandomQuestion = function(channel, u) {
         var base = this.baseUrl;
-        var rand = this.rand;
+        var rand = this.getUniqueRandomNumbers;
+        var getQuestion = this.getQuestion;
 
         request(this.unansweredUrl, function (error, response, body) {
             if (error || response.statusCode != 200) {
                 return;
             }
-
             var questions = $(".question", body);
-            var randNum = rand(questions.length);
-            var question = questions.eq(randNum);
-            var user = $(question).find(".user").text();
-            var heading = $(question).find(".content a").text();
-            var link = $(question).find(".content a").attr("href");
+            var randNum = rand(1, questions.length)[0];
+            var question = getQuestion(questions, randNum);
+            
             channel.send(
-                u + ": " + user + " needs help with \"" + 
-                heading + "\" - " + base + link);
+                u + ": " + question.user + " needs help with \"" + 
+                question.heading + "\" - " + base + question.link);
         });
     };
     
@@ -87,9 +112,11 @@ Plugin = exports.Plugin = function(irc) {
      */
     this.getTagged = function(channel, u, m) {
         var base = this.baseUrl;
-        var rand = this.rand, randNums = [];
+        var getQuestion = this.getQuestion;
+        var getRandArray = this.getUniqueRandomNumbers;
         var tag = m.replace("!tagged", "").trim();
-        var sluggifiedTag = tag.replace(/\s+/g,'-')
+        var sluggifiedTag = 
+                tag.replace(/\s+/g,'-')
                    .replace(/[^a-zA-Z0-9\-]/g,'')
                    .toLowerCase();
 
@@ -112,23 +139,14 @@ Plugin = exports.Plugin = function(irc) {
                     channel.send(maxQuestions + " unanswered questions matching the tag " + tag + " coming up:");
                 else
                     channel.send("No unanswered questions matching the tag " + tag + " found");
+                randNums = getRandArray(maxQuestions, questions.length);
 
                 for(var i = 0; i < maxQuestions; i++) {
-                    do {
-                        randNum = rand(questions.length);
-                    }
-                    while(randNums.indexOf(randNum) != -1);
-
-                    randNums.push(randNum);
-
-                    var question = questions.eq(randNum);
-                    var user = $(question).find(".user").text();
-                    var heading = $(question).find(".content a").text();
-                    var link = $(question).find(".content a").attr("href");
+                    var question = getQuestion(questions, randNums[i]);
+            
                     channel.send(
-                        user + " needs help with \"" + 
-                        heading + "\" - " + base + link);
-                    }
+                        u + ": " + question.user + " needs help with \"" + 
+                        question.heading + "\" - " + base + question.link);                    }
                 };
         });
     }
