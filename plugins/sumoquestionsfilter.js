@@ -60,21 +60,33 @@ Plugin = exports.Plugin = function(irc) {
      * quest was started
      * @user User who requested the status
      */
-    this.getRandomQuestion = function(channel, u) {
+    this.getRandomQuestion = function(channel, u, m) {
         var base = this.baseUrl;
         var rand = this.getUniqueRandomNumbers;
         var getQuestion = this.getQuestion;
         var postIt = this.postQuestionInfo;
+        var numQuestions = parseInt(m.replace("!random", "").trim());
+        if(isNaN(numQuestions)) {
+            numQuestions = 1;
+        }
+        if(numQuestions > 10) {
+            channel.send(u + ": " + "Usage: !random <1..10>");
+            return;
+        }
 
         request(this.unansweredUrl, function (error, response, body) {
             if (error || response.statusCode != 200) {
                 return;
             }
             var questions = $(".question", body);
-            var randNum = rand(1, questions.length)[0];
-            var question = getQuestion(questions, randNum);
+            var randNum = rand(numQuestions, questions.length);
+            if(numQuestions > questions.length)
+                numQuestions = questions.length;
             
-            postIt(base, channel, u, question);
+            for(var i = 0; i < numQuestions; i++) {
+                var question = getQuestion(questions, randNum[i]);
+                postIt(base, channel, u, question);
+            }
         });
     };
     
@@ -174,11 +186,7 @@ Plugin.prototype.onMessage = function(msg) {
         case '!check':
             this.getStatus(channel, u);
         break;
-        
-        case '!random':
-            this.getRandomQuestion(channel, u);
-        break;
-        
+
         case '!info':
             this.getInfo(channel, u);
         break;
@@ -186,6 +194,10 @@ Plugin.prototype.onMessage = function(msg) {
     
     if(m.indexOf("!tagged") == 0) {
         this.getTagged(channel, u, m);
+    }
+    
+    if(m.indexOf("!random") == 0) {
+        this.getRandomQuestion(channel, u, m);
     }
 };
 
