@@ -49,6 +49,12 @@ Plugin = exports.Plugin = function(irc) {
         };
     }
     
+    this.postQuestionInfo = function(channel, u, question) {
+        var base = this.baseUrl;
+        channel.send(u + ": " + question.user + " needs help with \"" + 
+                     question.heading + "\" - " + base + question.link);  
+    }
+    
     /**
      * Gets a random unanswered question from SUMO
      * @param channel Channel where the !random re-
@@ -59,6 +65,7 @@ Plugin = exports.Plugin = function(irc) {
         var base = this.baseUrl;
         var rand = this.getUniqueRandomNumbers;
         var getQuestion = this.getQuestion;
+        var postIt = this.postQuestionInfo;
 
         request(this.unansweredUrl, function (error, response, body) {
             if (error || response.statusCode != 200) {
@@ -68,9 +75,7 @@ Plugin = exports.Plugin = function(irc) {
             var randNum = rand(1, questions.length)[0];
             var question = getQuestion(questions, randNum);
             
-            channel.send(
-                u + ": " + question.user + " needs help with \"" + 
-                question.heading + "\" - " + base + question.link);
+            postIt(channel, u, question);
         });
     };
     
@@ -111,9 +116,9 @@ Plugin = exports.Plugin = function(irc) {
      * @param m: Message that contains the tag
      */
     this.getTagged = function(channel, u, m) {
-        var base = this.baseUrl;
-        var getQuestion = this.getQuestion;
-        var getRandArray = this.getUniqueRandomNumbers;
+        var getQuestion = this.getQuestion,
+            getRandArray = this.getUniqueRandomNumbers,
+            postIt = this.postQuestionInfo;
         var tag = m.replace("!tagged", "").trim();
         var sluggifiedTag = 
                 tag.replace(/\s+/g,'-')
@@ -143,11 +148,9 @@ Plugin = exports.Plugin = function(irc) {
 
                 for(var i = 0; i < maxQuestions; i++) {
                     var question = getQuestion(questions, randNums[i]);
-            
-                    channel.send(
-                        u + ": " + question.user + " needs help with \"" + 
-                        question.heading + "\" - " + base + question.link);                    }
-                };
+                    postIt(channel, u, question);
+                }
+            };
         });
     }
 };
