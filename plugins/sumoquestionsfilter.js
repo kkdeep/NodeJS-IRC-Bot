@@ -15,7 +15,6 @@ Plugin = exports.Plugin = function(irc) {
 	this.author = 'Tobias Markus';
 
 	this.irc = irc;
-	this.filters = ['!status'];
     this.baseUrl = "https://support.mozilla.org";
     this.unansweredUrl = this.baseUrl + "/en-US/questions?filter=no-replies";
     
@@ -79,6 +78,46 @@ Plugin = exports.Plugin = function(irc) {
         channel.send("Tobias 'Tobbi' Markus and available under the terms of the");
         channel.send("MPL. See http://www.mozilla.org/MPL/1.1/ for further details.");
     }
+    
+    this.getTagged = function(channel, u, m) {
+        var base = this.baseUrl;
+        var tag = m.replace("!tagged", "").trim();
+        var sluggifiedTag = tag.replace(/\s+/g,'-')
+                   .replace(/[^a-zA-Z0-9\-]/g,'')
+                   .toLowerCase();
+
+        if(tag == "") {
+            channel.send(u + ": " + "Usage: !tagged <tag name>");
+            return;
+        }
+        var url = this.unansweredUrl + "&tagged=" + sluggifiedTag;
+        var maxQuestions;
+        request(url, function (error, response, body) {
+            if (!error && response.statusCode == 200) {
+                var questions = $(".question", body);
+                if(questions.length > 3) {
+                    maxQuestions = 3;
+                }
+                else {
+                    maxQuestions = questions.length;
+                };
+                if(maxQuestions > 0)
+                    channel.send(maxQuestions + " unanswered questions matching the tag " + tag + " coming up:");
+                else
+                    channel.send("No unanswered questions matching the tag " + tag + " found");
+
+                for(var i = 0; i < maxQuestions; i++) {
+                    var question = questions.eq(i);
+                    var user = $(question).find(".user").text();
+                    var heading = $(question).find(".content a").text();
+                    var link = $(question).find(".content a").attr("href");
+                    channel.send(
+                        user + " needs help with \"" + 
+                        heading + "\" - " + base + link);
+                    }
+                };
+        });
+    }
 };
 
 Plugin.prototype.onMessage = function(msg) {
@@ -108,6 +147,10 @@ Plugin.prototype.onMessage = function(msg) {
         case '!info':
             this.getInfo(channel, u);
         break;
+    }
+    
+    if(m.indexOf("!tagged") == 0) {
+        this.getTagged(channel, u, m);
     }
 };
 
