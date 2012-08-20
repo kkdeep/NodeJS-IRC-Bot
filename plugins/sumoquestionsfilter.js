@@ -17,6 +17,7 @@ Plugin = exports.Plugin = function(irc) {
 	this.irc = irc;
     this.baseUrl = "https://support.mozilla.org";
     this.unansweredUrl = this.baseUrl + "/en-US/questions?filter=no-replies";
+    this.kbSearchUrl = this.baseUrl + "/en-US/search?language=en-US&a=1&w=1&q=";
     
     this.getUniqueRandomNumbers = function(x, max) {
         var randNums = [];
@@ -165,6 +166,41 @@ Plugin = exports.Plugin = function(irc) {
             };
         });
     }
+    
+    this.getKbResults = function(channel, u, m) {
+        var base = this.baseUrl;
+        var keyword = m.replace("!kbsearch", "").trim();
+        var url = this.kbSearchUrl + keyword;
+        var htmlUrl = url;
+        url += "&format=json";
+        if(keyword == "") {
+            channel.send(u + ": " + "Usage: !kbsearch <search term>");
+            return;
+        }
+        
+        request(url, function (error, response, body) {
+            if (error || response.statusCode != 200) {
+                return;
+            };
+            
+            var results = $.parseJSON(body);
+            if(results.total == 0) {
+                channel.send(u + ": No results for " + keyword + " found.");
+                return;
+            }
+            
+            channel.send(u + ": " + "Found " + results.total + 
+                         " results in the Knowledge Base for " + keyword + 
+                         ". Showing first three results: ");
+                         
+            for(var i = 0; i < 3; i++) {
+                var result = results.results[i];
+                channel.send(u + ": " + result.title + " - " + base + result.url);
+            }
+            channel.send(u + ": Other results can be found here: " + htmlUrl);
+        });
+
+    }
 };
 
 Plugin.prototype.onMessage = function(msg) {
@@ -199,6 +235,10 @@ Plugin.prototype.onMessage = function(msg) {
     if(m.indexOf("!random") == 0) {
         this.getRandomQuestion(channel, u, m);
     }
+    
+    if(m.indexOf("!kbsearch") == 0) {
+        this.getKbResults(channel, u, m);
+    }
 };
 
 // onJoin handler for logging
@@ -207,7 +247,7 @@ Plugin.prototype.onJoin = function(msg) {
 		u = this.irc.user(msg.prefix), // user
         channel = this.irc.channels[c];
     
-    if(c == "#thefunclubofsumo") {
+    if(c == "#thefunclubofsumo" && u != "SUMODayBot") {
         channel.send("Welcome to the SUMO hangout channel. I'm just testing sending a message to every user that joins, in order to field-test the behaviour on a SUMO day. This can as well ping the specific user.");
     }
     //channel.send(u + ": Welcome to SUMO day! Help us answer questions in the support forum! Say !status to get the number of open questions or !random to get a random question.");
