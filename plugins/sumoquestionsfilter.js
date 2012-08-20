@@ -170,7 +170,7 @@ Plugin = exports.Plugin = function(irc) {
     this.getKbResults = function(channel, u, m) {
         var base = this.baseUrl;
         var keyword = m.replace("!kbsearch", "").trim();
-        var url = this.kbSearchUrl + keyword;
+        var url = this.kbSearchUrl + encodeURIComponent(keyword);
         var htmlUrl = url;
         url += "&format=json";
         if(keyword == "") {
