@@ -197,7 +197,7 @@ Plugin = exports.Plugin = function(irc) {
                 var result = results.results[i];
                 channel.send(u + ": " + result.title + " - " + base + result.url);
             }
-            channel.send(u + ": Other results can be found here: " + htmlUrl);
+            channel.send(u + ": Other results: " + htmlUrl);
         });
 
     }
