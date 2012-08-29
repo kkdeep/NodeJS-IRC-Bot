@@ -347,6 +347,13 @@ Plugin = exports.Plugin = function(irc) {
             
         this.writeSettingsFile();
      }
+     
+    this.showAvailableCommands = function(channel, u, m) {
+        channel.send(u + "Normal user commands: " + 
+        "!status (=!check), !info, !tagged <tag>, !random <1..5>, !kbsearch <term>");
+        channel.send(u + "Admin commands: " + 
+        "!addgreeting <greeting>, !togglegreeting (on|off), !adduser <username>, !removeuser <username>, !etherpad <etherpad_link>, !commands");
+     }
 }
 
 Plugin.prototype.onMessage = function(msg) {
@@ -404,6 +411,10 @@ Plugin.prototype.onMessage = function(msg) {
     
     if(m.indexOf("!togglegreeting") == 0) {
         this.toggleGreeting(channel, u, m);
+    }
+    
+    if(m.indexOf("!commands") == 0) {
+        this.showAvailableCommands(channel, u, m);
     }
 }
 
