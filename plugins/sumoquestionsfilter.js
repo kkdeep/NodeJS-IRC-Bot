@@ -54,7 +54,7 @@ Plugin = exports.Plugin = function(irc) {
         var settings = {
             admins: this.privilegedUsers,
             messages: this.defaultMessages,
-            wikiUrl: this.etherpadUrl
+            etherpadUrl: this.etherpadUrl
         };
         var text = JSON.stringify(settings);
         fs.writeFile("sumoprefs.json", text, function(err) {
