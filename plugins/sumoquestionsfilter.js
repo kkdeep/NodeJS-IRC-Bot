@@ -18,6 +18,12 @@ Plugin = exports.Plugin = function(irc) {
     this.baseUrl = "https://support.mozilla.org";
     this.unansweredUrl = this.baseUrl + "/en-US/questions?filter=no-replies";
     this.kbSearchUrl = this.baseUrl + "/en-US/search?language=en-US&a=1&w=1&q=";
+    this.privilegedUsers = ['rosana', 'madalina', 'michelleluna', 'tobbi', 'tobbi_', 'tobbi__'];
+    this.defaultMessages = [
+        "It's SUMO day! We answerz all the questionz! Go to $unanswered_url to answer some questions, get some information on the wiki $wiki_url, or say !status.",
+        "Gimme an 'S', Gimme a 'U', Gimme an 'M', Gimme an 'U'. It's SUMO day!!! Answer questions and help firefox users: $unanswered_url, find more information on the wiki $wiki_url or say !status",
+        "Let's rock it!!1one: $unanswered_url or more information on the wiki: $wiki_url. Say !status for status."];
+    this.wikiUrl = "http://etherpad.mozilla.org/sumo-questions-day-something";
     
     this.getUniqueRandomNumbers = function(x, max) {
         var randNums = [];
@@ -90,6 +96,39 @@ Plugin = exports.Plugin = function(irc) {
             }
         });
     };
+    
+    
+    this.addPrivilegedUser = function(channel, u, m) {
+        if($.inArray(u.toLowerCase(), this.privilegedUsers) == -1) {
+            channel.send(u + ": You're not allowed to perform this action!");
+            return;
+        };
+        var user = m.replace("!adduser ", "").toLowerCase();
+        if($.inArray(user, this.privilegedUsers) != -1) {
+            channel.send(user + " is already a privileged user!");
+            return;
+        }
+
+        this.privilegedUsers.push(user);
+        
+        channel.send('Added new privileged user ' + user + ". This user will now be able to change the etherpad link and add others to the list of privileged users.");
+    };
+    
+    this.removePrivilegedUser = function(channel, u, m) {
+        if($.inArray(u.toLowerCase(), this.privilegedUsers) == -1) {
+            channel.send(u + ": You're not allowed to perform this action!");
+            return;
+        };
+        var user = m.replace("!removeuser ", "").toLowerCase();
+        
+        if($.inArray(user, this.privilegedUsers) == -1) {
+            channel.send("I never trusted " + user + " in the first place!");
+        }
+        else {
+            this.privilegedUsers.splice(user, 1);
+            channel.send("Removed " + user + " from the list of privileged users.");
+        };
+    }
     
     /**
      * Gets the current status of the unanswered forum threads
@@ -167,6 +206,12 @@ Plugin = exports.Plugin = function(irc) {
         });
     }
     
+    /**
+     * Returns Knowledge Base results for the specific keyword     
+     * @param channel: Channel where the request was stated
+     * @param u: User who asked for random
+     * @param m: Message that contains the tag
+     */
     this.getKbResults = function(channel, u, m) {
         var base = this.baseUrl;
         var keyword = m.replace("!kbsearch", "").trim();
@@ -201,6 +246,26 @@ Plugin = exports.Plugin = function(irc) {
         });
 
     }
+    
+    /**
+     * Returns Knowledge Base results for the specific keyword     
+     * @param channel: Channel where the request was stated
+     * @param u: User who asked for random
+     * @param m: Message that contains the tag
+     */
+     this.setEtherpadUrl = function(channel, u, m) {
+         if($.inArray(u.toLowerCase(), this.privilegedUsers) == -1) {
+            channel.send(u + ": You're not allowed to perform this action!");
+            return;
+         }
+         var wikiUrl = m.replace("!etherpad ", "");
+         if(wikiUrl.indexOf("etherpad.mozilla.org") == -1) {
+            channel.send(u + ": You must be kidding me: That is not a link to a Mozilla Etherpad");
+            return;
+         };
+         this.wikiUrl = wikiUrl;
+         channel.send(u + ": Etherpad URL successfully set to " + this.wikiUrl);
+     }
 };
 
 Plugin.prototype.onMessage = function(msg) {
@@ -239,16 +304,31 @@ Plugin.prototype.onMessage = function(msg) {
     if(m.indexOf("!kbsearch") == 0) {
         this.getKbResults(channel, u, m);
     }
+    
+    if(m.indexOf("!etherpad") == 0) {
+        this.setEtherpadUrl(channel, u, m);
+    }
+    
+    if(m.indexOf("!adduser") == 0) {
+        this.addPrivilegedUser(channel, u, m);
+    }
+    
+    if(m.indexOf("!removeuser") == 0) {
+        this.removePrivilegedUser(channel, u, m);
+    }
 };
 
 // onJoin handler for logging
 Plugin.prototype.onJoin = function(msg) {
     var c = msg.arguments[0], // channel
 		u = this.irc.user(msg.prefix), // user
-        channel = this.irc.channels[c];
+        channel = this.irc.channels[c],
+        randNum = Math.floor(Math.random() * this.defaultMessages.length),
+        currentMessage = this.defaultMessages[randNum]
+                             .replace("$unanswered_url", this.unansweredUrl)
+                             .replace("$wiki_url", this.wikiUrl);
     
-    if(c == "#thefunclubofsumo" && u != "SUMODayBot") {
-        channel.send("Welcome to the SUMO hangout channel. I'm just testing sending a message to every user that joins, in order to field-test the behaviour on a SUMO day. This can as well ping the specific user.");
+    if(c == "##thefunclubofsumo" && u != "SUMODayBot") {
+        channel.send(u + ": " + currentMessage);
     }
-    //channel.send(u + ": Welcome to SUMO day! Help us answer questions in the support forum! Say !status to get the number of open questions or !random to get a random question.");
 };
