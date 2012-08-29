@@ -421,7 +421,7 @@ Plugin.prototype.onJoin = function(msg) {
                              .replace("$etherpad_url", this.etherpadUrl)
                              .replace("$user", u);
     
-    if(c == "##thefunclubofsumo") {
+    if(c == "#sumo") {
         channel.send(currentMessage);
     }
 };

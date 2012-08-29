@@ -12,12 +12,12 @@ var sys = require('util'),
  * Config
  */
 var config = {
-	host:		'irc.freenode.org',
+	host:		'irc.mozilla.org',
 	port:		6667,
 	nick:		'SUMODayBot',
 	username:	'SUMODayBot',
 	realname:	'Powered by Michael Owens',
-	channels:	['##thefunclubofsumo', '##sumo', '##lizardlounge'],
+	channels:	['#sumo'],
 	command:	'.',
 	debug:		true,
 	plugins:	['global', 'reload', 'gezien', 'sumoquestionsfilter']
