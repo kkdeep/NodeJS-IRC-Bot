@@ -33,6 +33,7 @@ Plugin = exports.Plugin = function(irc) {
             self.privilegedUsers = settings.admins || [];
             self.defaultMessages = settings.messages || [];
             self.etherpadUrl = settings.etherpadUrl || '';
+            self.welcomeOnJoin = settings.welcomeOnJoin || false;
 	    });
     };
     this.loadSettingsFile();
@@ -54,7 +55,8 @@ Plugin = exports.Plugin = function(irc) {
         var settings = {
             admins: this.privilegedUsers,
             messages: this.defaultMessages,
-            etherpadUrl: this.etherpadUrl
+            etherpadUrl: this.etherpadUrl,
+            welcomeOnJoin: this.welcomeOnJoin
         };
         var text = JSON.stringify(settings);
         fs.writeFile("sumoprefs.json", text, function(err) {
@@ -86,7 +88,7 @@ Plugin = exports.Plugin = function(irc) {
     
     this.postQuestionInfo = function(base, channel, u, question) {
         channel.send(u + ": " + question.user + " needs help with \"" + 
-                     question.heading + "\" - " + base + question.link);  
+                     question.heading + "\" - " + base + question.link);
     };
     
     /**
@@ -323,6 +325,28 @@ Plugin = exports.Plugin = function(irc) {
          this.writeSettingsFile();
          channel.send(u + ": Greeting saved successfully!");
      }
+     
+     this.toggleGreeting = function(channel, u, m) {
+        if(!this.checkPrivileged(u, channel))
+            return;
+        
+        var on_off = m.replace("!togglegreeting ", "").toLowerCase();
+        if(on_off != 'on' && on_off != 'off') {
+            channel.send(u + ": Usage: !togglegreeting (on|off)");
+            return;
+        }
+
+        if(on_off == 'on') {
+            this.welcomeOnJoin = true;
+            channel.send(u + ": I will now start greeting people who join this channel!");
+        }
+        else {
+            this.welcomeOnJoin = false;
+            channel.send(u + ": Okay, I will stop greeting people!");
+        }
+            
+        this.writeSettingsFile();
+     }
 }
 
 Plugin.prototype.onMessage = function(msg) {
@@ -377,6 +401,10 @@ Plugin.prototype.onMessage = function(msg) {
     if(m.indexOf("!addgreeting") == 0) {
         this.addGreeting(channel, u, m);
     }
+    
+    if(m.indexOf("!togglegreeting") == 0) {
+        this.toggleGreeting(channel, u, m);
+    }
 }
 
 // onJoin handler for logging
@@ -384,7 +412,7 @@ Plugin.prototype.onJoin = function(msg) {
     var c = msg.arguments[0], // channel
 		u = this.irc.user(msg.prefix), // user
         channel = this.irc.channels[c];
-    if(u == "SUMODayBot")
+    if(u == "SUMODayBot" || !this.welcomeOnJoin)
         return;
     
     var randNum = Math.floor(Math.random() * this.defaultMessages.length),
