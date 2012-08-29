@@ -124,16 +124,16 @@ Plugin = exports.Plugin = function(irc) {
             }
         });
     };
-    this.checkPrivileged = function(u) {
+    this.checkPrivileged = function(u, c) {
         if($.inArray(u.toLowerCase(), this.privilegedUsers) == -1) {
-            channel.send(u + ": You're not allowed to perform this action!");
+            c.send(u + ": You're not allowed to perform this action!");
             return false;
         };
         return true;
     };
     
     this.addPrivilegedUser = function(channel, u, m) {
-        if(!this.checkPrivileged(u))
+        if(!this.checkPrivileged(u, channel))
             return;
 
         var user = m.replace("!adduser ", "").toLowerCase();
@@ -148,7 +148,7 @@ Plugin = exports.Plugin = function(irc) {
     }
     
     this.removePrivilegedUser = function(channel, u, m) {
-        if(!this.checkPrivileged(u))
+        if(!this.checkPrivileged(u, channel))
             return;
 
         var user = m.replace("!removeuser ", "").toLowerCase();
@@ -284,7 +284,7 @@ Plugin = exports.Plugin = function(irc) {
      * @param m: Message that contains the tag
      */
      this.setEtherpadUrl = function(channel, u, m) {
-         if(!this.checkPrivileged(u))
+         if(!this.checkPrivileged(u, channel))
             return;
          var msg = "You must be kidding me: That is not a link to a Mozilla Etherpad";
          var etherpadUrl = m.replace("!etherpad ", "");
@@ -306,7 +306,7 @@ Plugin = exports.Plugin = function(irc) {
       * @param m: Message that contains the tag
       */
      this.addGreeting = function(channel, u, m) {
-         if(!this.checkPrivileged(u))
+         if(!this.checkPrivileged(u, channel))
             return;
          
          var greeting = m.replace("!addgreeting ", "").trim();
