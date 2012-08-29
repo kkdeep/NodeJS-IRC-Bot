@@ -349,9 +349,9 @@ Plugin = exports.Plugin = function(irc) {
      }
      
     this.showAvailableCommands = function(channel, u, m) {
-        channel.send(u + "Normal user commands: " + 
+        channel.send(u + ": Normal user commands: " + 
         "!status (=!check), !info, !tagged <tag>, !random <1..5>, !kbsearch <term>");
-        channel.send(u + "Admin commands: " + 
+        channel.send(u + ": Admin commands: " + 
         "!addgreeting <greeting>, !togglegreeting (on|off), !adduser <username>, !removeuser <username>, !etherpad <etherpad_link>, !commands");
      }
 }
@@ -432,7 +432,5 @@ Plugin.prototype.onJoin = function(msg) {
                              .replace("$etherpad_url", this.etherpadUrl)
                              .replace("$user", u);
     
-    if(c == "#sumo") {
-        channel.send(currentMessage);
-    }
+    channel.send(currentMessage);
 };
