@@ -148,18 +148,18 @@ Plugin = exports.Plugin = function(irc) {
     }
     
     this.removePrivilegedUser = function(channel, u, m) {
-        if(!this.checkPrivileged(u)) {
+        if(!this.checkPrivileged(u))
             return;
 
         var user = m.replace("!removeuser ", "").toLowerCase();
         if($.inArray(user, this.privilegedUsers) == -1) {
             channel.send("I never trusted " + user + " in the first place!");
-        }
-        else {
-            this.privilegedUsers = this.privilegedUsers.splice(user, 1);
-            this.writeSettingsFile();
-            channel.send("Removed " + user + " from the list of privileged users.");
+            return;
         };
+
+        this.privilegedUsers = this.privilegedUsers.splice(user, 1);
+        this.writeSettingsFile();
+        channel.send("Removed " + user + " from the list of privileged users.");
     }
     
     /**
@@ -190,7 +190,7 @@ Plugin = exports.Plugin = function(irc) {
         channel.send("Custom SUMO plugin written by");
         channel.send("Tobias 'Tobbi' Markus and available under the terms of the");
         channel.send("MPL. See http://www.mozilla.org/MPL/1.1/ for further details.");
-    }
+    };
     
     /**
      * Returns questions tagged with the specific tag
@@ -218,12 +218,10 @@ Plugin = exports.Plugin = function(irc) {
         request(url, function (error, response, body) {
             if (!error && response.statusCode == 200) {
                 var questions = $(".question", body);
-                if(questions.length > 3) {
+                if(questions.length > 3)
                     maxQuestions = 3;
-                }
-                else {
+                else
                     maxQuestions = questions.length;
-                };
                 if(maxQuestions > 0)
                     channel.send(maxQuestions + " unanswered questions matching the tag " + tag + " coming up:");
                 else
@@ -236,7 +234,7 @@ Plugin = exports.Plugin = function(irc) {
                 }
             };
         });
-    }
+    };
     
     /**
      * Returns Knowledge Base results for the specific keyword     
@@ -277,7 +275,7 @@ Plugin = exports.Plugin = function(irc) {
             channel.send(u + ": Other results: " + htmlUrl);
         });
 
-    }
+    };
     
     /**
      * Set the etherpad URL for this SUMO day   
@@ -326,7 +324,6 @@ Plugin = exports.Plugin = function(irc) {
          channel.send(u + ": Greeting saved successfully!");
      }
 }
-};
 
 Plugin.prototype.onMessage = function(msg) {
 	var c = msg.arguments[0], // channel
